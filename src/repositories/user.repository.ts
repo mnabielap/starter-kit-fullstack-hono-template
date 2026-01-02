@@ -22,7 +22,7 @@ export const existsByEmail = async (db: D1Database, email: string, excludeUserId
 };
 
 export const create = async (db: D1Database, user: { name: string; email: string; password?: string; role: string }): Promise<Omit<User, 'password'> | null> => {
-  const stmt = db.prepare('INSERT INTO users (name, email, password, role) VALUES (?1, ?2, ?3, ?4) RETURNING id, name, email, role, is_email_verified');
+  const stmt = db.prepare('INSERT INTO users (name, email, password, role) VALUES (?1, ?2, ?3, ?4) RETURNING id, name, email, role, is_email_verified, created_at');
   return await stmt.bind(user.name, user.email, user.password, user.role).first<Omit<User, 'password'>>();
 };
 
@@ -30,7 +30,7 @@ export const update = async (db: D1Database, userId: number, updates: Partial<Us
   const setClauses = Object.keys(updates).map((key, i) => `${key} = ?${i + 1}`);
   const updateValues = Object.values(updates);
   
-  const stmt = db.prepare(`UPDATE users SET ${setClauses.join(', ')} WHERE id = ?${updateValues.length + 1} RETURNING id, name, email, role, is_email_verified`);
+  const stmt = db.prepare(`UPDATE users SET ${setClauses.join(', ')} WHERE id = ?${updateValues.length + 1} RETURNING id, name, email, role, is_email_verified, created_at`);
   return await stmt.bind(...updateValues, userId).first<Omit<User, 'password'>>();
 };
 
@@ -39,12 +39,13 @@ export const remove = async (db: D1Database, userId: number): Promise<void> => {
 };
 
 export const findAll = async (db: D1Database, filter: any, options: any) => {
-  const { name, role } = filter;
+  const { name, role, search, scope } = filter;
   const { sortBy, limit = 10, page = 1 } = options;
 
   let whereClauses = [];
   const queryParams: (string | number)[] = [];
 
+  // Legacy simple filters
   if (name) {
     whereClauses.push(`name LIKE ?${queryParams.length + 1}`);
     queryParams.push(`%${name}%`);
@@ -52,6 +53,24 @@ export const findAll = async (db: D1Database, filter: any, options: any) => {
   if (role) {
     whereClauses.push(`role = ?${queryParams.length + 1}`);
     queryParams.push(role);
+  }
+
+  // Advanced Search Scopes
+  if (search) {
+    if (scope === 'name') {
+      whereClauses.push(`name LIKE ?${queryParams.length + 1}`);
+      queryParams.push(`%${search}%`);
+    } else if (scope === 'email') {
+      whereClauses.push(`email LIKE ?${queryParams.length + 1}`);
+      queryParams.push(`%${search}%`);
+    } else if (scope === 'id') {
+      whereClauses.push(`id = ?${queryParams.length + 1}`);
+      queryParams.push(search);
+    } else {
+      // Default: 'all' (Name OR Email)
+      whereClauses.push(`(name LIKE ?${queryParams.length + 1} OR email LIKE ?${queryParams.length + 2})`);
+      queryParams.push(`%${search}%`, `%${search}%`);
+    }
   }
   
   const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
@@ -63,16 +82,17 @@ export const findAll = async (db: D1Database, filter: any, options: any) => {
   // Build main query
   const offset = (page - 1) * limit;
   let orderByString = 'ORDER BY created_at DESC';
+  
   if (sortBy) {
     const [key, order] = sortBy.split(':');
     if (key && (order === 'asc' || order === 'desc')) {
-      if (['id', 'name', 'email', 'role'].includes(key)) {
+      if (['id', 'name', 'email', 'role', 'created_at'].includes(key)) {
         orderByString = `ORDER BY ${key} ${order.toUpperCase()}`;
       }
     }
   }
 
-  const query = `SELECT id, name, email, role, is_email_verified FROM users ${whereString} ${orderByString} LIMIT ?${queryParams.length + 1} OFFSET ?${queryParams.length + 2}`;
+  const query = `SELECT id, name, email, role, is_email_verified, created_at FROM users ${whereString} ${orderByString} LIMIT ?${queryParams.length + 1} OFFSET ?${queryParams.length + 2}`;
   queryParams.push(limit, offset);
 
   const resultsStmt = db.prepare(query).bind(...queryParams);

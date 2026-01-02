@@ -10,7 +10,7 @@ export const createUser = async (c: any) => {
 
 export const getUsers = async (c: any) => {
   const query = c.req.valid('query');
-  const filter = pick(query, ['name', 'role']);
+  const filter = pick(query, ['name', 'role', 'search', 'scope']);
   const options = pick(query, ['sortBy', 'limit', 'page']);
   const result = await userService.queryUsers(c.env.DB, filter, options);
   return c.json(result);

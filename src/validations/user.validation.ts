@@ -23,6 +23,8 @@ export const getUsersSchema = z.object({
     sortBy: z.string().optional(),
     limit: z.coerce.number().int().min(1).optional(),
     page: z.coerce.number().int().min(1).optional(),
+    search: z.string().optional(),
+    scope: z.enum(['all', 'name', 'email', 'id']).optional().default('all'),
   }),
 });
 
@@ -38,7 +40,7 @@ export const updateUserSchema = z.object({
       name: z.string().optional(),
       role: z.enum(['user', 'admin']).optional(),
     })
-    .partial() // Memastikan semua field di dalam adalah opsional
+    .partial()
     .refine((data) => Object.keys(data).length > 0, {
       message: 'Update body must have at least one field',
     }),
