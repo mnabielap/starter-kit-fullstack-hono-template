@@ -33,20 +33,19 @@ export const auth = (...requiredRights: string[]): MiddlewareHandler => {
       if (requiredRights.length > 0) {
         const userRights = roleRights.get(user.role) || [];
         const hasRequiredRights = requiredRights.every((right) => userRights.includes(right));
-        if (!hasRequiredRights && c.req.param('userId') !== user.id.toString()) {
-          // Allow users to manage themselves even if they have no rights, except for get all users
-          if (requiredRights.includes('getUsers')) {
-             throw new ApiError(403, 'Forbidden');
+
+        if (!hasRequiredRights) {
+          const resourceUserId = c.req.param('userId');
+
+          if (!resourceUserId || resourceUserId !== user.id.toString()) {
+            throw new ApiError(403, 'Forbidden');
           }
-        } else if (!hasRequiredRights) {
-           throw new ApiError(403, 'Forbidden');
         }
       }
     } catch (e) {
-      // Catch all types of authentication errors (expired, invalid signature, user not found, etc.)
-      // and return them as a single, consistent error message.
       const errorMessage = e instanceof ApiError ? e.message : 'Please authenticate';
-      throw new ApiError(401, errorMessage);
+      const statusCode = e instanceof ApiError ? e.status : 401;
+      throw new ApiError(statusCode, errorMessage);
     }
 
     await next();
