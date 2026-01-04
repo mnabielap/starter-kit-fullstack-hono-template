@@ -1,6 +1,6 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { zValidator } from '@hono/zod-validator';
-import * as userController from '@/controllers/user.controller';
+import * as userController from '@/controllers/api/user.controller';
 import { auth } from '@/middlewares/auth';
 import {
     createUserSchema,

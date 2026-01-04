@@ -5,16 +5,29 @@ import { defineConfig } from 'vite'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-// 2. Create an equivalent __dirname constant for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [
-    build(),
+    build({
+      entry: 'src/index.ts',
+    }),
     devServer({
       adapter,
-      entry: 'src/index.ts'
+      entry: 'src/index.ts',
+      exclude: [
+        /^\/assets\/.+/,
+        /^\/js\/.+/,
+        /^\/favicon\.ico$/,
+        /.*\.woff2?(\?.*)?$/,
+        /.*\.ttf(\?.*)?$/,
+        /.*\.png$/,
+        /.*\.jpg$/,
+        /.*\.svg$/,
+        /.*\.css$/,
+        /.*\.js$/
+      ]
     })
   ],
   resolve: {
@@ -22,4 +35,5 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  publicDir: 'public',
 })

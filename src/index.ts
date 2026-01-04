@@ -1,53 +1,63 @@
-// 1. Import OpenAPI Hono, not regular Hono
-import { OpenAPIHono } from '@hono/zod-openapi'; 
+import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { swaggerUI } from '@hono/swagger-ui';
-import { logger as honoLogger } from 'hono/logger'
+import { logger as honoLogger } from 'hono/logger';
 
 import { errorHandler } from '@/middlewares/errorHandler';
-import v1Routes from '@/routes/v1';
+import apiRoutes from '@/routes/api';
+import webRoutes from '@/routes/web';
 
-// 2. Create an instance of OpenAPIHono
+// Create instance
 const app = new OpenAPIHono();
 
-// --- Middleware Global ---
+// --- Global Middlewares ---
 app.use('*', honoLogger());
-app.use('*', cors({
-  origin: '*', // Allow all origins. For production, replace with your frontend domain, e.g.: 'https://my-app.com'
-  allowHeaders: ['Content-Type', 'Authorization'], // Allowed headers
-  allowMethods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'], // Allowed methods
-  maxAge: 600, // Caching duration for preflight requests (in seconds)
-}));
 app.use('*', secureHeaders());
 
-// --- Routing ---
-// Redirect root to API documentation
-app.get('/', (c) => c.redirect('/ui'));
+// CORS for API only
+app.use('/v1/*', cors({
+  origin: '*', 
+  allowHeaders: ['Content-Type', 'Authorization', 'X-CSRF-TOKEN'],
+  allowMethods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  maxAge: 600,
+}));
 
-// V1 API Routes
-app.route('/v1', v1Routes);
+// --- API Routing ---
+// All API endpoints are prefixed with /v1
+app.route('/v1', apiRoutes);
 
-// --- OpenAPI Documentation (Swagger) ---
+// --- Web Routing (Frontend) ---
+// Root and other UI routes
+app.route('/', webRoutes);
+
+// --- OpenAPI Documentation ---
 app.doc('/v1/openapi.json', {
   openapi: '3.0.0',
   info: {
     version: '1.0.0',
-    title: 'Hono API Starter Kit by mnabielap (https://github.com/mnabielap)',
-    description: 'A full-featured REST API starter kit built with Hono, Cloudflare D1, and Zod by mnabielap (https://github.com/mnabielap).',
+    title: 'Hono Fullstack Velzon API',
+    description: 'Fullstack Starter Kit with Hono and Velzon UI.',
   },
-  servers: [
-    { url: 'http://localhost:5173', description: 'Localhost' },
-    { url: 'https://starter-kit-restapi-hono.pages.dev', description: 'Production' },
-  ],
 });
 
 app.get('/ui', swaggerUI({ url: '/v1/openapi.json' }));
 
-
 // --- Error Handling ---
 app.notFound((c) => {
-  return c.json({ code: 404, message: 'Not Found' }, 404);
+  // If request is for API, return JSON
+  if (c.req.path.startsWith('/v1')) {
+    return c.json({ code: 404, message: 'Not Found' }, 404);
+  }
+  // If request is for Web, render 404 Page
+  // You can create a specialized 404 view later, for now simple HTML:
+  return c.html(`
+    <div style="text-align:center; padding: 50px; font-family: sans-serif;">
+      <h1 style="color: #405189;">404 - Page Not Found</h1>
+      <p>The page you are looking for does not exist.</p>
+      <a href="/">Go to Dashboard</a>
+    </div>
+  `, 404);
 });
 
 app.onError(errorHandler);

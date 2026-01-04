@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "starter-kit-restapi-hono",
+	"name": "starter-kit-fullstack-hono-template",
 	"compatibility_date": "2025-08-10",
 	"compatibility_flags": ["nodejs_compat"],
 	"pages_build_output_dir": "./dist",
@@ -14,8 +14,8 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "starter-kit-restapi-hono-db",
-			"database_id": "a179feee-b71d-403b-9228-a16afdfa31d2"
+			"database_name": "starter-kit-fullstack-hono-template-db",
+			"database_id": "2b421def-5a57-40e6-bdbd-8213a33f1632"
 		}
 	],
 	"vars": {
@@ -49,7 +49,7 @@
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/
 	 */
-	// "assets": { "directory": "./public/", "binding": "ASSETS" }
+	// "assets": { "directory": "./public/", "binding": "STATIC_ASSETS" }
 	/**
 	 * Service Bindings (communicate between multiple Workers)
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings

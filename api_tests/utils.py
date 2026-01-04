@@ -6,7 +6,7 @@ import time
 from urllib.parse import urlparse
 
 # --- CONFIGURATION constants ---
-BASE_URL = "https://starter-kit-restapi-hono.pages.dev/v1" 
+BASE_URL = "https://starter-kit-fullstack-hono-template.pages.dev/v1" 
 CONFIG_FILE_BASE = "secrets.json"
 
 # --- HELPER: Config Management (Secrets) ---

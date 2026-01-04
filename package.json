@@ -1,5 +1,5 @@
 {
-	"name": "starter-kit-restapi-hono",
+	"name": "starter-kit-fullstack-hono-template",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
@@ -7,8 +7,10 @@
 		"preview": "vite build && wrangler pages dev",
 		"deploy": "npm run build && wrangler pages deploy",
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
-		"db:schema": "wrangler d1 execute starter-kit-restapi-hono-db --file=./src/db/schema.sql --local",
-		"db:seed": "wrangler d1 execute starter-kit-restapi-hono-db --file=./src/db/seed.sql --local"
+		"db:schema": "wrangler d1 execute starter-kit-fullstack-hono-template-db --file=./src/db/schema.sql --local",
+		"db:seed": "wrangler d1 execute starter-kit-fullstack-hono-template-db --file=./src/db/seed.sql --local",
+		"db:remote:schema": "wrangler d1 execute starter-kit-fullstack-hono-template-db --file=./src/db/schema.sql --remote",
+		"db:remote:seed": "wrangler d1 execute starter-kit-fullstack-hono-template-db --file=./src/db/seed.sql --remote"
 	},
 	"dependencies": {
 		"@hono/swagger-ui": "^0.5.2",
@@ -18,6 +20,7 @@
 		"hono": "^4.9.0"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20241106.0",
 		"@hono/vite-build": "^1.2.0",
 		"@hono/vite-dev-server": "^0.18.2",
 		"vite": "^6.3.5",
